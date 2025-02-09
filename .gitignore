@@ -27,3 +27,5 @@ go.work.sum
 
 # assets
 static/
+
+*.txt
