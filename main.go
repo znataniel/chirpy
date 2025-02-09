@@ -19,9 +19,16 @@ func (cfg *apiConfig) middlewareMetricsFs(h http.Handler) http.Handler {
 }
 
 func (cfg *apiConfig) getFsHits(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+	template := `<html>
+  <body>
+    <h1>Welcome, Chirpy Admin</h1>
+    <p>Chirpy has been visited %d times!</p>
+  </body>
+</html>`
+
+	w.Header().Add("Content-Type", "text/html")
 	w.WriteHeader(200)
-	w.Write([]byte(fmt.Sprintf("Hits: %v", cfg.fileserverHits.Load())))
+	w.Write([]byte(fmt.Sprintf(template, cfg.fileserverHits.Load())))
 }
 
 func (cfg *apiConfig) resetFsHits(w http.ResponseWriter, r *http.Request) {
@@ -46,9 +53,9 @@ func main() {
 
 	serveMux := http.NewServeMux()
 	serveMux.Handle("/app/", cfg.middlewareMetricsFs(http.StripPrefix("/app", http.FileServer(http.Dir(ROOT)))))
-	serveMux.HandleFunc("/healthz", getHealthz)
-	serveMux.HandleFunc("/metrics", cfg.getFsHits)
-	serveMux.HandleFunc("/reset", cfg.resetFsHits)
+	serveMux.HandleFunc("GET /api/healthz", getHealthz)
+	serveMux.HandleFunc("GET /admin/metrics", cfg.getFsHits)
+	serveMux.HandleFunc("POST /admin/reset", cfg.resetFsHits)
 
 	server := http.Server{
 		Addr:    ":" + PORT,
