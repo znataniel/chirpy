@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"sync/atomic"
@@ -17,84 +15,6 @@ func (cfg *apiConfig) middlewareMetricsFs(h http.Handler) http.Handler {
 		cfg.fileserverHits.Add(1)
 		h.ServeHTTP(w, r)
 	})
-}
-
-func (cfg *apiConfig) getFsHits(w http.ResponseWriter, r *http.Request) {
-	template := `<html>
-  <body>
-    <h1>Welcome, Chirpy Admin</h1>
-    <p>Chirpy has been visited %d times!</p>
-  </body>
-</html>`
-
-	w.Header().Add("Content-Type", "text/html")
-	w.WriteHeader(200)
-	w.Write([]byte(fmt.Sprintf(template, cfg.fileserverHits.Load())))
-}
-
-func (cfg *apiConfig) resetFsHits(w http.ResponseWriter, r *http.Request) {
-	cfg.fileserverHits.And(0)
-	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(200)
-	w.Write([]byte("Hits reset was successful"))
-}
-
-func getHealthz(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(200)
-	w.Write([]byte("OK"))
-}
-
-func validateChirp(w http.ResponseWriter, r *http.Request) {
-	type chirp struct {
-		Body string `json:"body"`
-	}
-
-	type notValid struct {
-		Error string `json:"error"`
-	}
-
-	type valid struct {
-		Valid bool `json:"valid"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	ch := chirp{}
-	if err := decoder.Decode(&ch); err != nil {
-		log.Printf("error decoding request body: %s", err)
-		w.WriteHeader(500)
-		return
-	}
-
-	var data []byte
-	var err error
-	w.Header().Set("Content-Type", "application/json")
-
-	if len(ch.Body) > 0 && len(ch.Body) <= 140 {
-		res := valid{
-			Valid: true,
-		}
-		data, err = json.Marshal(res)
-		if err != nil {
-			log.Printf("could not encode data: %s", err)
-			w.WriteHeader(500)
-			return
-		}
-		w.WriteHeader(200)
-	} else {
-		res := notValid{
-			Error: "Chirp is too long",
-		}
-		data, err = json.Marshal(res)
-		if err != nil {
-			log.Printf("could not encode data: %s", err)
-			w.WriteHeader(500)
-			return
-		}
-		w.WriteHeader(400)
-	}
-
-	w.Write(data)
 }
 
 func main() {
