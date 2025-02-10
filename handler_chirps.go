@@ -70,14 +70,13 @@ func (cfg *apiConfig) createChirp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) getAllChirps(w http.ResponseWriter, r *http.Request) {
-	var jsonChirps []Chirp
-
 	gotChirps, err := cfg.dbq.GetAllChirps(r.Context())
 	if err != nil {
 		respondJsonError(w, http.StatusInternalServerError, err, "could not retrieve chirps from db")
 		return
 	}
 
+	var jsonChirps []Chirp
 	for _, c := range gotChirps {
 		jsonChirps = append(jsonChirps, Chirp{
 			ID:        c.ID,
@@ -90,4 +89,26 @@ func (cfg *apiConfig) getAllChirps(w http.ResponseWriter, r *http.Request) {
 
 	respondJson(w, http.StatusOK, jsonChirps)
 
+}
+
+func (cfg *apiConfig) getChirpById(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("chirpID"))
+	if err != nil {
+		respondJsonError(w, http.StatusInternalServerError, err, "could not read id value from path")
+		return
+	}
+
+	ch, err := cfg.dbq.GetChirpById(r.Context(), id)
+	if err != nil {
+		respondJsonError(w, http.StatusInternalServerError, err, "could not retrieve chirp from db")
+		return
+	}
+
+	respondJson(w, http.StatusOK, Chirp{
+		ID:        ch.ID,
+		CreatedAt: ch.CreatedAt,
+		UpdatedAt: ch.UpdatedAt,
+		Body:      ch.Body,
+		UserID:    ch.UserID,
+	})
 }
