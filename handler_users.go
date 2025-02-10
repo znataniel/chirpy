@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/znataniel/chirpy/internal/auth"
+	"github.com/znataniel/chirpy/internal/database"
 )
 
 type User struct {
@@ -16,19 +18,29 @@ type User struct {
 }
 
 func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
-	type userEmail struct {
-		Email string `json:"email"`
+	type userInput struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	e := userEmail{}
+	e := userInput{}
 
 	if err := decoder.Decode(&e); err != nil {
 		respondJsonError(w, http.StatusInternalServerError, err, "could not decode json data")
 		return
 	}
 
-	createdUser, err := cfg.dbq.CreateUser(r.Context(), e.Email)
+	pass, err := auth.HashPassword(e.Password)
+	if err != nil {
+		respondJsonError(w, http.StatusInternalServerError, err, "could not hash password")
+		return
+	}
+
+	createdUser, err := cfg.dbq.CreateUser(r.Context(), database.CreateUserParams{
+		Email:          e.Email,
+		HashedPassword: pass,
+	})
 	if err != nil {
 		respondJsonError(w, http.StatusInternalServerError, err, "could not create user in db")
 		return
@@ -40,6 +52,5 @@ func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: createdUser.UpdatedAt,
 		Email:     createdUser.Email,
 	}
-
 	respondJson(w, http.StatusCreated, u)
 }
