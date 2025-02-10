@@ -19,6 +19,17 @@ type Chirp struct {
 	UserID    uuid.UUID `json:"user_id"`
 }
 
+func cleanChrip(body string) string {
+	bannedWords := []string{"kerfuffle", "sharbert", "fornax"}
+	words := strings.Split(body, " ")
+	for i, w := range words {
+		if slices.Contains(bannedWords, strings.ToLower(w)) {
+			words[i] = "****"
+		}
+	}
+	return strings.Join(words, " ")
+}
+
 func (cfg *apiConfig) createChirp(w http.ResponseWriter, r *http.Request) {
 	type chirpInput struct {
 		Body   string    `json:"body"`
@@ -58,14 +69,25 @@ func (cfg *apiConfig) createChirp(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func cleanChrip(body string) string {
-	bannedWords := []string{"kerfuffle", "sharbert", "fornax"}
-	words := strings.Split(body, " ")
-	for i, w := range words {
-		if slices.Contains(bannedWords, strings.ToLower(w)) {
-			words[i] = "****"
-		}
+func (cfg *apiConfig) getAllChirps(w http.ResponseWriter, r *http.Request) {
+	var jsonChirps []Chirp
+
+	gotChirps, err := cfg.dbq.GetAllChirps(r.Context())
+	if err != nil {
+		respondJsonError(w, http.StatusInternalServerError, err, "could not retrieve chirps from db")
+		return
 	}
-	return strings.Join(words, " ")
+
+	for _, c := range gotChirps {
+		jsonChirps = append(jsonChirps, Chirp{
+			ID:        c.ID,
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
+			Body:      c.Body,
+			UserID:    c.UserID,
+		})
+	}
+
+	respondJson(w, http.StatusOK, jsonChirps)
 
 }
