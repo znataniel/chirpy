@@ -46,10 +46,10 @@ func main() {
 	serveMux := http.NewServeMux()
 	serveMux.Handle("/app/", cfg.middlewareMetricsFs(http.StripPrefix("/app", http.FileServer(http.Dir(ROOT)))))
 	serveMux.HandleFunc("GET /api/healthz", getHealthz)
-	serveMux.HandleFunc("POST /api/validate_chirp", validateChirp)
 	serveMux.HandleFunc("GET /admin/metrics", cfg.getFsHits)
 	serveMux.HandleFunc("POST /admin/reset", cfg.reset)
 	serveMux.HandleFunc("POST /api/users", cfg.createUser)
+	serveMux.HandleFunc("POST /api/chirps", cfg.createChirp)
 
 	server := http.Server{
 		Addr:    ":" + PORT,
