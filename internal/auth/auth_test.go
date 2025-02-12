@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -60,4 +61,19 @@ func TestValidateExpiredJWT(t *testing.T) {
 		t.Fatalf("jwt should have expired after: %s", duration)
 	}
 
+}
+
+func TestGetBearerToken(t *testing.T) {
+	token := "abbcccdddd"
+	h := http.Header{}
+	h.Set("authorization", token)
+
+	bearerToken, err := getBearerToken(h)
+	if err != nil {
+		t.Fatalf("failure retrieving bearer token from header: %v", err)
+	}
+
+	if bearerToken != token {
+		t.Fatalf("tokens do not match:\n\t%v\n\t%v", token, bearerToken)
+	}
 }
