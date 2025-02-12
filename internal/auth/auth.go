@@ -20,7 +20,7 @@ func CheckPasswordHash(password, hash string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
 
-func getBearerToken(headers http.Header) (string, error) {
+func GetBearerToken(headers http.Header) (string, error) {
 	authValue := headers.Get("Authorization")
 	if authValue == "" {
 		return "", fmt.Errorf("no authorization header found")

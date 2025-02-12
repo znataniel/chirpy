@@ -16,6 +16,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	dbq            *database.Queries
 	platform       string
+	secret         string
 }
 
 func (cfg *apiConfig) middlewareMetricsFs(h http.Handler) http.Handler {
@@ -41,6 +42,7 @@ func main() {
 	cfg := apiConfig{
 		dbq:      database.New(db),
 		platform: os.Getenv("PLATFORM"),
+		secret:   os.Getenv("SECRET"),
 	}
 
 	serveMux := http.NewServeMux()

@@ -3,14 +3,16 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/znataniel/chirpy/internal/auth"
 )
 
 func (cfg *apiConfig) login(w http.ResponseWriter, r *http.Request) {
 	type userInput struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email            string `json:"email"`
+		Password         string `json:"password"`
+		ExpiresInSeconds *int   `json:"expires_in_seconds,omitempty"`
 	}
 
 	input := userInput{}
@@ -33,10 +35,20 @@ func (cfg *apiConfig) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var durInSec int
+	if input.ExpiresInSeconds == nil || *(input.ExpiresInSeconds) > 3600 {
+		durInSec = 3600
+	} else {
+		durInSec = *(input.ExpiresInSeconds)
+	}
+
+	genToken, err := auth.MakeJWT(gotUser.ID, cfg.secret, time.Duration(durInSec*int(time.Second)))
+
 	respondJson(w, http.StatusOK, User{
 		ID:        gotUser.ID,
 		CreatedAt: gotUser.CreatedAt,
 		UpdatedAt: gotUser.UpdatedAt,
 		Email:     gotUser.Email,
+		Token:     genToken,
 	})
 }
