@@ -112,7 +112,7 @@ func (cfg *apiConfig) getChirpById(w http.ResponseWriter, r *http.Request) {
 
 	ch, err := cfg.dbq.GetChirpById(r.Context(), id)
 	if err != nil {
-		respondJsonError(w, http.StatusInternalServerError, err, "could not retrieve chirp from db")
+		respondJsonError(w, http.StatusNotFound, err, "chirp not found")
 		return
 	}
 
@@ -123,4 +123,40 @@ func (cfg *apiConfig) getChirpById(w http.ResponseWriter, r *http.Request) {
 		Body:      ch.Body,
 		UserID:    ch.UserID,
 	})
+}
+
+func (cfg *apiConfig) deleteChirpById(w http.ResponseWriter, r *http.Request) {
+	chirpID, err := uuid.Parse(r.PathValue("chirpID"))
+	if err != nil {
+		respondJsonError(w, http.StatusInternalServerError, err, "could not read id value from path")
+		return
+	}
+
+	accessToken, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondJsonError(w, http.StatusUnauthorized, err, "authorization header not found")
+		return
+	}
+	userID, err := auth.ValidateJWT(accessToken, cfg.secret)
+	if err != nil {
+		respondJsonError(w, http.StatusUnauthorized, err, "could not validate access")
+		return
+	}
+
+	ch, err := cfg.dbq.GetChirpById(r.Context(), chirpID)
+	if err != nil {
+		respondJsonError(w, http.StatusNotFound, err, "chirp was not found")
+		return
+	}
+	if ch.UserID != userID {
+		respondJsonError(w, http.StatusForbidden, err, "chirp does not belong to this user")
+		return
+	}
+
+	if err := cfg.dbq.DeleteChirpByID(r.Context(), ch.ID); err != nil {
+		respondJsonError(w, http.StatusInternalServerError, err, "chirp could not be deleted")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
