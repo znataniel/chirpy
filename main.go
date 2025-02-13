@@ -17,6 +17,7 @@ type apiConfig struct {
 	dbq            *database.Queries
 	platform       string
 	secret         string
+	polka_key      string
 }
 
 func (cfg *apiConfig) middlewareMetricsFs(h http.Handler) http.Handler {
@@ -40,9 +41,10 @@ func main() {
 	}
 
 	cfg := apiConfig{
-		dbq:      database.New(db),
-		platform: os.Getenv("PLATFORM"),
-		secret:   os.Getenv("SECRET"),
+		dbq:       database.New(db),
+		platform:  os.Getenv("PLATFORM"),
+		secret:    os.Getenv("SECRET"),
+		polka_key: os.Getenv("POLKA_KEY"),
 	}
 
 	serveMux := http.NewServeMux()

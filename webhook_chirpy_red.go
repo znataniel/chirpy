@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/znataniel/chirpy/internal/auth"
 	"github.com/znataniel/chirpy/internal/database"
 )
 
@@ -14,6 +15,17 @@ func (cfg *apiConfig) upgradeUser(w http.ResponseWriter, r *http.Request) {
 		Data  struct {
 			UserID string `json:"user_id"`
 		} `json:"data"`
+	}
+
+	// authorization
+	apiKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondJsonError(w, http.StatusUnauthorized, err, "no api key found")
+		return
+	}
+	if apiKey != cfg.polka_key {
+		respondJsonError(w, http.StatusUnauthorized, err, "invalid api key")
+		return
 	}
 
 	decoder := json.NewDecoder(r.Body)

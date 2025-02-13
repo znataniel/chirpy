@@ -30,3 +30,14 @@ func GetBearerToken(headers http.Header) (string, error) {
 
 	return strippedAuth, nil
 }
+
+func GetAPIKey(headers http.Header) (string, error) {
+	authValue := headers.Get("Authorization")
+	if authValue == "" {
+		return "", fmt.Errorf("no authorization header found")
+	}
+
+	apiKey := strings.TrimPrefix(authValue, "ApiKey ")
+
+	return apiKey, nil
+}
