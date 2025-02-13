@@ -12,7 +12,7 @@ import (
 func (cfg *apiConfig) revoke(w http.ResponseWriter, r *http.Request) {
 	refreshToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		respondJsonError(w, http.StatusBadRequest, err, "authorization header not found")
+		respondJsonError(w, http.StatusUnauthorized, err, "authorization header not found")
 		return
 	}
 

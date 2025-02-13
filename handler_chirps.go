@@ -39,7 +39,7 @@ func (cfg *apiConfig) createChirp(w http.ResponseWriter, r *http.Request) {
 	// jwt authorization
 	bearerToken, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		respondJsonError(w, http.StatusInternalServerError, err, "could not read token from header")
+		respondJsonError(w, http.StatusUnauthorized, err, "could not read token from header")
 		return
 	}
 	tokenUserID, ok := auth.ValidateJWT(bearerToken, cfg.secret)

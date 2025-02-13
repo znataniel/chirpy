@@ -57,6 +57,7 @@ func main() {
 	serveMux.HandleFunc("POST /api/login", cfg.login)
 	serveMux.HandleFunc("POST /api/refresh", cfg.refresh)
 	serveMux.HandleFunc("POST /api/revoke", cfg.revoke)
+	serveMux.HandleFunc("PUT /api/users", cfg.updateUser)
 
 	server := http.Server{
 		Addr:    ":" + PORT,
