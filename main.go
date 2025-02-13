@@ -55,6 +55,8 @@ func main() {
 	serveMux.HandleFunc("GET /api/chirps", cfg.getAllChirps)
 	serveMux.HandleFunc("GET /api/chirps/{chirpID}", cfg.getChirpById)
 	serveMux.HandleFunc("POST /api/login", cfg.login)
+	serveMux.HandleFunc("POST /api/refresh", cfg.refresh)
+	serveMux.HandleFunc("POST /api/revoke", cfg.revoke)
 
 	server := http.Server{
 		Addr:    ":" + PORT,

@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/znataniel/chirpy/internal/auth"
+	"github.com/znataniel/chirpy/internal/database"
 )
 
 func (cfg *apiConfig) login(w http.ResponseWriter, r *http.Request) {
 	type userInput struct {
-		Email            string `json:"email"`
-		Password         string `json:"password"`
-		ExpiresInSeconds *int   `json:"expires_in_seconds,omitempty"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	input := userInput{}
@@ -35,20 +35,25 @@ func (cfg *apiConfig) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var durInSec int
-	if input.ExpiresInSeconds == nil || *(input.ExpiresInSeconds) > 3600 {
-		durInSec = 3600
-	} else {
-		durInSec = *(input.ExpiresInSeconds)
+	genToken, err := auth.MakeJWT(gotUser.ID, cfg.secret)
+
+	refreshToken := auth.MakeRefreshToken()
+	_, err = cfg.dbq.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+		Token:     refreshToken,
+		ExpiresAt: time.Now().AddDate(60, 0, 0).UTC(),
+		UserID:    gotUser.ID,
+	})
+	if err != nil {
+		respondJsonError(w, http.StatusInternalServerError, err, "could not store refresh token")
+		return
 	}
 
-	genToken, err := auth.MakeJWT(gotUser.ID, cfg.secret, time.Duration(durInSec*int(time.Second)))
-
 	respondJson(w, http.StatusOK, User{
-		ID:        gotUser.ID,
-		CreatedAt: gotUser.CreatedAt,
-		UpdatedAt: gotUser.UpdatedAt,
-		Email:     gotUser.Email,
-		Token:     genToken,
+		ID:           gotUser.ID,
+		CreatedAt:    gotUser.CreatedAt,
+		UpdatedAt:    gotUser.UpdatedAt,
+		Email:        gotUser.Email,
+		Token:        genToken,
+		RefreshToken: refreshToken,
 	})
 }
