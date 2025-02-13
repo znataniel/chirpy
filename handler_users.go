@@ -15,6 +15,7 @@ type User struct {
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 	Email        string    `json:"email"`
+	IsChirpyRed  bool      `json:"is_chirpy_red"`
 	Token        string    `json:"token" json:"-"`
 	RefreshToken string    `json:"refresh_token" json:"-"`
 }
@@ -49,10 +50,11 @@ func (cfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u := User{
-		ID:        createdUser.ID,
-		CreatedAt: createdUser.CreatedAt,
-		UpdatedAt: createdUser.UpdatedAt,
-		Email:     createdUser.Email,
+		ID:          createdUser.ID,
+		CreatedAt:   createdUser.CreatedAt,
+		UpdatedAt:   createdUser.UpdatedAt,
+		Email:       createdUser.Email,
+		IsChirpyRed: createdUser.IsChirpyRed,
 	}
 	respondJson(w, http.StatusCreated, u)
 }
@@ -106,9 +108,10 @@ func (cfg *apiConfig) updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJson(w, http.StatusOK, User{
-		ID:        updatedUser.ID,
-		CreatedAt: updatedUser.CreatedAt,
-		UpdatedAt: updatedUser.UpdatedAt,
-		Email:     updatedUser.Email,
+		ID:          updatedUser.ID,
+		CreatedAt:   updatedUser.CreatedAt,
+		UpdatedAt:   updatedUser.UpdatedAt,
+		Email:       updatedUser.Email,
+		IsChirpyRed: updatedUser.IsChirpyRed,
 	})
 }

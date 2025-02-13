@@ -53,6 +53,7 @@ func (cfg *apiConfig) login(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:    gotUser.CreatedAt,
 		UpdatedAt:    gotUser.UpdatedAt,
 		Email:        gotUser.Email,
+		IsChirpyRed:  gotUser.IsChirpyRed,
 		Token:        genToken,
 		RefreshToken: refreshToken,
 	})
