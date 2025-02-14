@@ -81,6 +81,21 @@ func (cfg *apiConfig) createChirp(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
+	s := r.URL.Query().Get("author_id")
+	if s == "" {
+		cfg.getAllChirps(w, r)
+		return
+	}
+
+	userID, err := uuid.Parse(s)
+	if err != nil {
+		respondJsonError(w, http.StatusBadRequest, err, "invalid uuid in query parameter")
+		return
+	}
+	cfg.getChirpsByUserID(w, r, userID)
+}
+
 func (cfg *apiConfig) getAllChirps(w http.ResponseWriter, r *http.Request) {
 	gotChirps, err := cfg.dbq.GetAllChirps(r.Context())
 	if err != nil {
@@ -123,6 +138,27 @@ func (cfg *apiConfig) getChirpById(w http.ResponseWriter, r *http.Request) {
 		Body:      ch.Body,
 		UserID:    ch.UserID,
 	})
+}
+
+func (cfg *apiConfig) getChirpsByUserID(w http.ResponseWriter, r *http.Request, userID uuid.UUID) {
+	gotChirps, err := cfg.dbq.GetAllChirpsById(r.Context(), userID)
+	if err != nil {
+		respondJsonError(w, http.StatusNotFound, err, "user not found")
+		return
+	}
+
+	var jsonChirps []Chirp
+	for _, c := range gotChirps {
+		jsonChirps = append(jsonChirps, Chirp{
+			ID:        c.ID,
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
+			Body:      c.Body,
+			UserID:    c.UserID,
+		})
+	}
+
+	respondJson(w, http.StatusOK, jsonChirps)
 }
 
 func (cfg *apiConfig) deleteChirpById(w http.ResponseWriter, r *http.Request) {
